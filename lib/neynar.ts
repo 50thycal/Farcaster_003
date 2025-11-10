@@ -6,7 +6,7 @@ export async function hub(path: string, init?: RequestInit) {
   const res = await fetch(`https://api.neynar.com/v2/${path}`, {
     ...init,
     headers: {
-      'api_key': key,
+      'x-api-key': key,
       'content-type': 'application/json',
       ...(init?.headers || {})
     },

@@ -6,14 +6,22 @@ export default function GraphPage() {
   const [tab, setTab] = useState<'followers'|'following'>('followers')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string|null>(null)
 
   async function load(cursor = '') {
-    setLoading(true)
+    setLoading(true); setError(null); setData(null)
     const path = tab === 'followers' ? '/api/graph/followers' : '/api/graph/following'
     const url = `${path}?fid=${fid}${cursor ? `&cursor=${cursor}`:''}`
     const res = await fetch(url)
+    if (!res.ok) {
+      const msg = await res.text().catch(()=> '')
+      setError(`Error ${res.status}: ${msg || 'request failed'}`)
+      setLoading(false)
+      return
+    }
     const json = await res.json()
-    setData(json); setLoading(false)
+    setData(json)
+    setLoading(false)
   }
 
   return (
@@ -28,6 +36,7 @@ export default function GraphPage() {
         <button onClick={()=>setTab('following')} className={tab==='following'?'font-semibold underline':''}>Following</button>
       </div>
       {loading && <p>Loading…</p>}
+      {error && <p className="text-red-600">{error}</p>}
       {data && (
         <>
           <ul className="divide-y">

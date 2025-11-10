@@ -5,12 +5,24 @@ export default function UsersPage() {
   const [q, setQ] = useState('')
   const [data, setData] = useState<any>(null)
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string|null>(null)
+
+  function normalizeQ(s: string) {
+    return s.trim().replace(/^@/, '') // strip @ if user types it
+  }
 
   async function search() {
-    setLoading(true)
-    const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`)
+    setLoading(true); setError(null); setData(null)
+    const res = await fetch(`/api/users/search?q=${encodeURIComponent(normalizeQ(q))}`)
+    if (!res.ok) {
+      const msg = await res.text().catch(()=> '')
+      setError(`Error ${res.status}: ${msg || 'request failed'}`)
+      setLoading(false)
+      return
+    }
     const json = await res.json()
-    setData(json); setLoading(false)
+    setData(json)
+    setLoading(false)
   }
 
   return (
@@ -21,6 +33,7 @@ export default function UsersPage() {
         <button onClick={search} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50" disabled={!q || loading}>Search</button>
       </div>
       {loading && <p>Loading…</p>}
+      {error && <p className="text-red-600">{error}</p>}
       {data && (
         <ul className="divide-y">
           {data.items?.map((u:any)=> (
