@@ -1,51 +1,41 @@
-"use client";
-
-import Link from "next/link";
-import { useState } from "react";
+'use client'
+import { useState } from 'react'
 
 export default function UsersPage() {
-  const [query, setQuery] = useState("");
+  const [q, setQ] = useState('')
+  const [data, setData] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+
+  async function search() {
+    setLoading(true)
+    const res = await fetch(`/api/users/search?q=${encodeURIComponent(q)}`)
+    const json = await res.json()
+    setData(json); setLoading(false)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-purple-600 dark:text-purple-400 hover:underline"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              User Search
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Find Farcaster users by handle or display name
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-            <input
-              type="text"
-              placeholder="Search by username or display name..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-            />
-          </div>
-
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              🚧 Search functionality will be implemented in PR-002 with Neynar
-              SDK integration
-            </p>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Find Users</h2>
+      <div className="flex gap-2">
+        <input value={q} onChange={e=>setQ(e.target.value)} placeholder="@handle or name" className="w-full rounded border p-2" />
+        <button onClick={search} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50" disabled={!q || loading}>Search</button>
       </div>
+      {loading && <p>Loading…</p>}
+      {data && (
+        <ul className="divide-y">
+          {data.items?.map((u:any)=> (
+            <li key={u.fid} className="py-3">
+              <div className="flex items-center gap-3">
+                {u.pfpUrl && <img src={u.pfpUrl} alt="" className="h-10 w-10 rounded-full" />}
+                <div>
+                  <div className="font-medium">{u.displayName || u.username}</div>
+                  <div className="text-sm text-gray-600">@{u.username} · fid {u.fid}</div>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
-  );
+  )
 }

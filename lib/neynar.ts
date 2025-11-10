@@ -1,17 +1,4 @@
-/**
- * Neynar client configuration
- * To be implemented in PR-002
- */
-
-export function getNeynarClient() {
-  const apiKey = process.env.NEYNAR_API_KEY;
-
-  if (!apiKey) {
-    throw new Error("NEYNAR_API_KEY is not configured");
-  }
-
-  // TODO: Initialize Neynar SDK client
-  return {
-    apiKey,
-  };
+// PR-002 will implement this. Stub for now.
+export async function hub(_path: string): Promise<Response> {
+  throw new Error('hub() not implemented — fill in PR-002')
 }

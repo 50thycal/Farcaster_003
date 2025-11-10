@@ -1,54 +1,52 @@
-"use client";
+'use client'
+import { useState } from 'react'
 
-import Link from "next/link";
-import { useState } from "react";
+function castUrlToHash(input: string) {
+  const m = input.trim().match(/([a-f0-9]{40})$/i)
+  return m ? m[1] : input.trim().replace(/^0x/, '')
+}
 
 export default function CastPage() {
-  const [input, setInput] = useState("");
+  const [val, setVal] = useState('')
+  const [cast, setCast] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
+  const [err, setErr] = useState<string| null>(null)
+
+  async function fetchCast() {
+    setErr(null); setLoading(true); setCast(null)
+    const hash = castUrlToHash(val)
+    const res = await fetch(`/api/casts/${hash}`)
+    if (!res.ok) { setErr('Not found'); setLoading(false); return }
+    const json = await res.json()
+    setCast(json); setLoading(false)
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-8">
-          <Link
-            href="/"
-            className="text-purple-600 dark:text-purple-400 hover:underline"
-          >
-            ← Back to Home
-          </Link>
-        </div>
-
-        <div className="space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-              Cast Lookup
-            </h1>
-            <p className="text-gray-600 dark:text-gray-300">
-              Retrieve casts by hash or Warpcast URL
-            </p>
-          </div>
-
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4">
-            <input
-              type="text"
-              placeholder="Paste cast hash (0x...) or Warpcast URL"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 dark:bg-gray-700 dark:text-white"
-            />
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Example: https://warpcast.com/username/0x123abc or 0x123abc
-            </p>
-          </div>
-
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <p className="text-sm text-yellow-800 dark:text-yellow-200">
-              🚧 Cast lookup will be implemented in PR-002 with Neynar SDK
-              integration
-            </p>
-          </div>
-        </div>
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Fetch Cast</h2>
+      <div className="flex gap-2">
+        <input value={val} onChange={e=>setVal(e.target.value)} placeholder="Warpcast URL or hash" className="w-full rounded border p-2" />
+        <button onClick={fetchCast} className="rounded bg-black px-3 py-2 text-white disabled:opacity-50" disabled={!val || loading}>Fetch</button>
       </div>
+      {loading && <p>Loading…</p>}
+      {err && <p className="text-red-600">{err}</p>}
+      {cast && (
+        <article className="rounded border p-4">
+          <header className="mb-2 flex items-center gap-3">
+            {cast.author?.pfpUrl && <img src={cast.author.pfpUrl} className="h-10 w-10 rounded-full" alt="" />}
+            <div>
+              <div className="font-medium">{cast.author?.displayName || cast.author?.username}</div>
+              <div className="text-sm text-gray-600">@{cast.author?.username} · fid {cast.author?.fid}</div>
+            </div>
+          </header>
+          <p className="whitespace-pre-wrap">{cast.text}</p>
+          <footer className="mt-3 text-sm text-gray-600">
+            <span>♥ {cast.likes ?? 0}</span>
+            <span className="mx-2">↻ {cast.recasts ?? 0}</span>
+            <span>💬 {cast.replies ?? 0}</span>
+          </footer>
+        </article>
+      )}
     </div>
-  );
+  )
 }
